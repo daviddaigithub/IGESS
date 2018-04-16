@@ -1,0 +1,314 @@
+% -*- mode: noweb; noweb-default-code-mode: R-mode; -*-
+\documentclass[11pt]{article}
+%% Set my margins
+\setlength{\oddsidemargin}{0.0truein}
+\setlength{\evensidemargin}{0.0truein}
+\setlength{\textwidth}{6.5truein}
+\setlength{\topmargin}{0.0truein}
+\setlength{\textheight}{9.0truein}
+\setlength{\headsep}{0.0truein}
+\setlength{\headheight}{0.0truein}
+\setlength{\topskip}{0pt}
+%% End of margins
+
+% \usepackage{subfigure}
+
+%%\pagestyle{myheadings}
+%%\markboth{$Date$\hfil$Revision$}{\thepage}
+\usepackage[pdftex,
+bookmarks,
+bookmarksopen,
+pdfauthor={Mingwei Dai},
+pdftitle={IGESS Vignette}]
+{hyperref}
+
+\title{`\texttt{IGESS}' Package to integrating individual-level genotype data and summary statistics in genome-wide association studies}
+\author{Mingwei Dai$~^{1,2}$, Jingsi Ming$~^2$, Mingxuan Cai$~^2$, Jin Liu$~^3$, Can Yang$~^2$, Xiang Wan$~^4$, Zongbe Xu$~^1$\\
+$~^1$ School of Mathematics and Statistics, Xi'an Jiaotong University, Xi'an, China.\\
+$~^2$ Department of Mathematics, Hong Kong Baptist University, Hong Kong.\\
+$~^3$ Centre of Quantitative Medicine, Duke-NUS Graduate Medical School, Singapore.\\
+$~^4$ Department of Computer Science, Hong Kong Baptist University, Hong Kong.\\
+Hong Kong.\\
+}
+
+\date{\today}
+
+
+
+\usepackage{Sweave}
+\begin{document}
+\input{IGESS_package-concordance}
+\maketitle
+\section{Overview}
+
+This vignette provides an introduction to the `\texttt{IGESS}' package.
+IGESS is a statistical approach to integrating individual level genotype data and summary statistics in Genome Wide Association Studies. This package provides computationally efficient and user friendly interface to fit and evaluate the IGESS model. It accepts both the R-type data and binary plink files.
+
+The package can be loaded with the command:
+
+
+\begin{Schunk}
+\begin{Sinput}
+R> library("IGESS")
+\end{Sinput}
+\end{Schunk}
+
+This vignette is organized as follows.
+Section \ref{fitting} discusses how to fit IGESS in various settings.
+Section \ref{cross_validation} show how to evaluate the performance in terms of cross validation. Section \ref{predict} shows how to predict by the generated model.
+
+
+\section{Workflow}\label{workflow}
+
+In this vignette, three different simulated data sets are used for demonstration. (1). R-type D1 = \{X0, y0, P0\} are genotype, phenotype and $p$-values, they have no information for the SNPs; (2) R-type D2= \{X, y, P\} are the counterparts, but they contain the information for the SNPs; (3) the genotyp data in the plink format are `\texttt{sim0.bed}', `\texttt{sim0.fam}', `\texttt{sim0.bim}', the $p$-values stored in \{P\} are with SNP information. For the simulation data, $\{X, X0\}$ are both $N \times M$ matrix, where $N=2000$ is the sample size and $M=3000$ is the number of SNPs; $\{y, y_0\}$ are both $N \times 1$ vector; $\{P, P0\}$ are both $M \times K$ matrix, where $M=3000$ is for the number of SNPs, $K=7$ is for the nubmer of GWAS.
+
+% \{X, y, p\_xy\} belongs to the first group which are pure matrix with no other information, \{geno, pheno, p\_geno\} belong to the second group which are R-type data with the information of SNPs. \{p\_plink, p\_plink0, p\_plinke\} belong to the third group, they also have the corresponding information for SNPs, for this group, we also provide the corresponding binary plink data, the detail would be mentioned later.
+The R-type data used in this package could be loaded by the command.
+\begin{Schunk}
+\begin{Sinput}
+R> data(DB)
+\end{Sinput}
+\end{Schunk}
+The binary plink files could be accessed by
+\begin{Schunk}
+\begin{Sinput}
+R> plinkfile <- gsub(".bim","",system.file("extdata", "sim0.bim", package = "IGESS"))
+\end{Sinput}
+\end{Schunk}
+
+\subsection{Fitting the IGESS}\label{fitting}
+
+R package \texttt{IGESS} provides flexible statistical framework
+and automatically adjusts its model structure based on the provided data.
+The \texttt{IGESS} model could be fitted in the following three ways.
+
+
+\subsubsection{R-type data with no SNPs' information}
+In this subsection, the matrices of genotype data and $p$-values, which have not any information for SNPs, are used. It requires that
+\begin{Schunk}
+\begin{Sinput}
+R> nrow(X0) == length(y0)
+\end{Sinput}
+\begin{Soutput}
+[1] TRUE
+\end{Soutput}
+\begin{Sinput}
+R> ncol(X0) == nrow(P0)
+\end{Sinput}
+\begin{Soutput}
+[1] TRUE
+\end{Soutput}
+\end{Schunk}
+
+The complete IGESS function is,
+\begin{Schunk}
+\begin{Sinput}
+R> fit <- IGESS(X, y, SS = NULL, opts = NULL, logfile = "screen", lbPval = 1e-12)
+\end{Sinput}
+\end{Schunk}
+
+The genotype data \texttt{X} and the phenotype data \texttt{y} must be specified, the remaining parameters are optional, they have default values. To be specific, \texttt{SS} is for the summary statistics, \texttt{opts} is for the runing parameter setting, \texttt{logfile} is for the log file name ( the default value `screen' indicates that it would print the information on the screen ) and \texttt{lbPval} is for the restriction of the minimal value of $p$-values. The output \texttt{fit} contains the parameters for the IGESS model, the detail would be mentioned in the following part.
+
+The parameter \texttt{opts} has two fields, `\texttt{max\_iter}' for the max number of iterations and `\texttt{dis\_gap}' for the display gap of the printing message. Their default values are $(600,60)$. They could be specified individually or simultaneously by either of the following commands.
+\begin{Schunk}
+\begin{Sinput}
+R> opts = list(dis_gap=1)
+R> opts = list(max_iter = 300)
+R> opts = list(max_iter = 300,dis_gap=5)
+\end{Sinput}
+\end{Schunk}
+The order for the parameters does not matter.
+
+
+The IGESS model is fitted only with the genotype data:
+\begin{Schunk}
+\begin{Sinput}
+R> fit <- IGESS(X0, y0)
+\end{Sinput}
+\end{Schunk}
+
+The IGESS model integrates the genotype data \{X0, y0\} and summary statistics \{P0\} with the following command
+\begin{Schunk}
+\begin{Sinput}
+R> fit <- IGESS(X0, y0, SS = P0)
+\end{Sinput}
+\end{Schunk}
+
+
+
+\subsubsection{R-type data with SNPs' information}
+If the genotype data and summary statitistics share only part of the set of SNPs, IGESS would take their intersection automaticly. The information for the genotype data and $p$-values are as follows.
+\begin{Schunk}
+\begin{Sinput}
+R> str(X)
+\end{Sinput}
+\begin{Soutput}
+ num [1:2000, 1:3000] 0.647 -0.353 0.647 -0.353 -0.353 0.647 -0.353 0.647 -0.353 -0.353 ...
+ - attr(*, "dimnames")=List of 2
+  ..$ : NULL
+  ..$ : chr [1:3000] "rs1" "rs2" "rs3" "rs4" ...
+\end{Soutput}
+\begin{Sinput}
+R> str(P)
+\end{Sinput}
+\begin{Soutput}
+'data.frame':	3000 obs. of  7 variables:
+ $ lab1: num  0.3217 0.1431 0.0511 0.3605 0.3478 ...
+ $ lab2: num  0.305 0.744 0.32 0.572 0.605 ...
+ $ lab3: num  0.3002 0.0364 0.6813 0.8258 0.7895 ...
+ $ lab4: num  1 0.8204 0.0952 0.4333 0.8873 ...
+ $ lab5: num  0.8729 0.2482 0.3401 0.0705 0.4139 ...
+ $ lab6: num  0.669 0.355 1 0.142 1 ...
+ $ lab7: num  1 0.546 1 0.181 0.139 ...
+\end{Soutput}
+\begin{Sinput}
+R> geno_snps = colnames(X)
+R> ss_snps = rownames(P)
+R> num_intersect <- intersect(geno_snps,ss_snps)
+R> print(length(num_intersect))
+\end{Sinput}
+\begin{Soutput}
+[1] 2900
+\end{Soutput}
+\end{Schunk}
+According to the above output, it could be seen that the genotype data and the summary statistics share $2900$ SNPs, IGESS uses the data with respect to the intersection of the SNPs to fit the model.
+
+\begin{Schunk}
+\begin{Sinput}
+R> fit <- IGESS(X, y, SS = P)
+\end{Sinput}
+\end{Schunk}
+
+
+\subsubsection{Binary plink file with R-type data storing the SNPs information}
+IGESS package also supports the input of binary plink file, which saves huge space for the genotype data.
+
+The complete IGESS function is,
+\begin{Schunk}
+\begin{Sinput}
+R> fit <- IGESS_Plink(genoplinkfile, SS = NULL, opts = NULL, logfile = "screen",
+                                                                   lbPval = 1e-12)
+\end{Sinput}
+\end{Schunk}
+
+In this scene,  genotype data in the plink format take the place of R-type data $\{X, y\}$
+\begin{Schunk}
+\begin{Sinput}
+R> fit <- IGESS_Plink(plinkfile, SS = P)
+\end{Sinput}
+\end{Schunk}
+For the simulated data in this package, all the information contained in the plink files is the same as $\{X, y\}$ in $D2$. IGESS will take intersection as it does for $D2$.
+
+
+
+The output for the above fitting is like following
+\begin{Schunk}
+\begin{Sinput}
+R> str(fit)
+\end{Sinput}
+\begin{Soutput}
+List of 12
+ $ sigma2beta: num 0.00176
+ $ sigma2e   : num 0.153
+ $ gammas    : num [1:2900, 1] 2.90e-07 1.54e-05 1.79e-05 2.32e-05 4.39e-07 ...
+ $ mu        : num [1:2900, 1] -0.003598 -0.004521 0.016769 0.008822 -0.000339 ...
+ $ S         : num [1:2900, 1] 0.000234 0.000165 0.000142 0.000221 0.000151 ...
+ $ pi        : num 0.0348
+ $ P         : num 2900
+ $ fdr       : num [1:2900, 1] 1 1 1 1 1 ...
+ $ cov       : num -0.664
+ $ L         : num 1781
+ $ iter      : num 6
+ $ param_beta: num [1:7, 1] 0.122 0.142 0.14 0.125 0.124 ...
+\end{Soutput}
+\end{Schunk}
+12 items of output are listed as above, the first 7 fields correspond to the notations $\sigma^2_{\beta},\sigma^2_e, \{\gamma_j\}_1^{M}$, $\{\mu_j\}_1^M$, $\{s^2_j\}_1^M$, $\pi$, $M$. $cov$ corresponds to the regression intercept for the IGESS model, $L$ is the final lower bound, $iter$ is the total iterations taken and \texttt{param\_beta} is the $\alpha$ parameter for each Beta distribution for the $p$-values.
+
+
+% We have 12 items of output as above, \texttt{gammas} stand for  for each variable,
+% $\mathrm{Pr}(gamma = 1)$, \texttt{mu} stand for the expectation of effect for each variable, \texttt{S} are the corresponding variances,\texttt{pi} is for the proportion of the associated variables,  \texttt{fdr} is for local fdr, \texttt{cov} is the intercept, \texttt{L} is the lowerbound and \texttt{iter} is the number of iterations taken for building the model, \texttt{param\_beta} is the parameter estimated for each GWAS of $p$-values.
+
+
+
+\subsection{Evaluate the performance of prediction by cross validation}\label{cross_validation}
+
+This section shows how to evaluate the performance of the model in terms of prediction accuracy by cross validation. Two corresponding functions are as follows
+
+\begin{Schunk}
+\begin{Sinput}
+R> performance <- IGESSCV(X, y, SS = NULL, opts = NULL, logfile = "screen", lbPval = 1e-12,                                                                            measure = "mse")
+\end{Sinput}
+\end{Schunk}
+
+and
+
+\begin{Schunk}
+\begin{Sinput}
+R> performance <- IGESSCV_Plink(plinkfile, SS = NULL, opts = NULL, logfile = "screen",                                                               lbPval = 1e-12, measure = "mse")
+\end{Sinput}
+\end{Schunk}
+
+The performance could be measured by $auc$ or $mse$(by default) specified by the parameter \texttt{measure}. Besides, the parameter \texttt{opts} have a field \texttt{n\_fold} to specify the number of folds for cross-validation as the previous one, the default value is $5$. It could be specified as
+\begin{Schunk}
+\begin{Sinput}
+R> opts = list(n_fold = 10)
+\end{Sinput}
+\end{Schunk}
+
+The model could be evaluated without $p$-values
+\begin{Schunk}
+\begin{Sinput}
+R>   performance <- IGESSCV(X, y)
+R>   print(performance)
+\end{Sinput}
+\begin{Soutput}
+$mse
+[1] 0.1945321
+\end{Soutput}
+\end{Schunk}
+
+or with $p$-values
+\begin{Schunk}
+\begin{Sinput}
+R>   performance <- IGESSCV(X, y, SS = P,measure = "auc")
+R>   print(performance)
+\end{Sinput}
+\begin{Soutput}
+$auc
+[1] 0.852946
+\end{Soutput}
+\end{Schunk}
+
+or with genotype data in the plink format
+\begin{Schunk}
+\begin{Sinput}
+R> performance <- IGESSCV_Plink(plinkfile, SS = P, measure = "auc")
+\end{Sinput}
+\end{Schunk}
+
+
+One could use the \texttt{IGESSCV} or \texttt{IGESSCV\_Plink} function to check which of these GWAS with summary statistics could result in better performance first, then run \texttt{IGESS} function to get the final model.
+
+
+
+
+
+\subsection{Predict with the fitted model}\label{predict}
+Once a model is fitted by \texttt{IGESS}, it could be used to predict the phenotype of the given genotype data by the following command.
+\begin{Schunk}
+\begin{Sinput}
+R> yhat <- IGESS_Predict(fit, X)
+\end{Sinput}
+\end{Schunk}
+
+Please contact Mingwei Dai at \texttt{daimingwei@gmail.com} for any questions or suggestions regarding the `\texttt{IGESS}' package.
+
+
+\begin{thebibliography}{99}
+\bibitem{IGESS} Mingwei Dai, Jingsi Ming, Mingxuan Cai, Jin Liu, Can Yang, Xiang Wan, Zongben Xu . IGESS: A Statistical Approach to Integrating Individual Level Genotype Data and Summary Statistics in Genome Wide Association Studies. Bioinformatics, 2017, 33(18): 2882-2889.
+
+\end{thebibliography}
+
+\end{document}
+
+

@@ -1,0 +1,15 @@
+Package: IGESS
+Type: Package
+Title: IGESS(Gentic Analysis integrating individual level data and summary statistics)
+Version: 0.1.0
+Author: Mingwei Dai and Can Yang
+Maintainer: Can Yang <eeyangc@gmail.com>
+Description: This package provides functions for fitting IGESS,A Statistical Approach to Integrating Individual Level Genotype Data and Summary Statistics in Genome Wide Association Studies.
+License: GPL (>= 2)
+Encoding: UTF-8
+URL:https://github.com/daviddaigithub/IGESS
+LazyData: true
+Imports:
+    Rcpp (>= 0.12.7),RcppArmadillo,BH
+LinkingTo: Rcpp,RcppArmadillo,BH
+RoxygenNote: 5.0.1
