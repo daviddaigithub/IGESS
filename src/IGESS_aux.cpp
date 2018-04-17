@@ -190,7 +190,7 @@ void get_matrix_pointer(void* lpfX, int N, int P, int type, bool efficient,Mat<d
    //  // }
     X_mat = X_p;
     befloat = true;
-    cout <<" Time Elapsed " << 1.0*(clock() - t1)/CLOCKS_PER_SEC << " seconds"<<endl;
+    // cout <<" Time Elapsed " << 1.0*(clock() - t1)/CLOCKS_PER_SEC << " seconds"<<endl;
   }else if(type == type_int){
     Mat<int>* X_p = new Mat<int>( static_cast<int *>(lpfX) , N, P, false);
     X_mat  = X_p;
@@ -211,22 +211,53 @@ Mat<double> cal_means(void* X_mat, bool befloat, int N){
   return SZX;
 }
 
-void centering(void* X_mat, vec& y, double& mean_y, mat & SZX, bool befloat, int N, int P){
-  // double mean_y = as_scalar(mean(y)); //mean of y
-  SZX =  cal_means(X_mat, befloat, N); //column means of X
+
+void centering(void* X_mat, vec& y, double& mean_y, bool befloat, int N, int P, double* x_mean, double* x_sd){
+  cal_means(X_mat, befloat, N, x_mean, x_sd);
   mean_y = as_scalar(mean(y)); //mean of y
   y -= mean_y;
-  double* x_mean = SZX.memptr();
-  // for(int i = 0; i < 10; i++){
-  //   cout << x_mean[i] << " ";
-  // }
-  // cout << endl;
   if ( befloat ){
+    Mat<double>* m = static_cast<Mat<double> *>(X_mat);
     for(int i = 0; i < P; i++){
-      static_cast<Mat<double> *>(X_mat) -> col(i) -= x_mean[i];
+      m -> col(i) -= x_mean[i];
+      m -> col(i) /= x_sd[i];
     }
   }
 }
+
+template <typename T>
+void calMeanSd(T * data, int N, int M, double* mean, double* sd){
+  int value;
+  for(int j = 0; j < M; j++){
+    mean[j] = 0;
+    sd[j] = 0;
+    for (int i = 0; i < N; i++) {
+      value = data[j * N + i];
+      mean[j] += value;
+      sd[j] += value * value;
+    }
+    sd[j] = sqrt(sd[j] / N - (mean[j] / N) * (mean[j] / N));
+    mean[j] = mean[j] / N;
+  }
+}
+
+void cal_means(void* X_mat, bool befloat, int N, double* mean, double* sd){
+  mat sumX;
+  if( befloat ){
+    // sumX = conv_to<mat>::from(sum(*static_cast<Mat<double> *>(X_mat), 0));
+    Mat<double>* m = static_cast<Mat<double> *>(X_mat);
+    calMeanSd(m->memptr(), N, m->n_cols, mean, sd);
+  }
+  else{
+    Mat<char>* m = static_cast<Mat<char> *>(X_mat);
+    calMeanSd(m->memptr(), N, m->n_cols, mean, sd);
+
+    // sumX = conv_to<mat>::from(sum(*static_cast<Mat<int> *>(X_mat), 0));
+  }
+  // mat SZX =  sumX * 1.0 / N ;//conv_to<mat>::from(mean(X, 0)); //column means of X
+  // return SZX;
+}
+
 
 vec cal_diagXTX(const vec& y, void* X_mat, bool befloat, const mat& SZX, int N, mat& xty){
   double sum_y = sum(y);

@@ -72,8 +72,8 @@ mat combine_summary_X(Mat<T>& geno, vector<SNP>& X_snps, SEXP SS, double lbPval)
       snps_overlap(X_snps, snps_from_ss, xindex, sindex);
       cout << "After Joining....Number of SNPs in Genotype Data:" << xindex.n_elem<< endl;
       lp_summaries = lp_summaries.rows(sindex);
-      cout << "sindex=" << sindex.size() << endl;
-      cout << lp_summaries.n_rows << " " << lp_summaries.n_cols << endl;
+      // cout << "sindex=" << sindex.size() << endl;
+      // cout << lp_summaries.n_rows << " " << lp_summaries.n_cols << endl;
       if(xindex.size() > 0 && xindex.size() < geno.n_cols){
         geno = geno.cols(xindex);
       }else if(xindex.size() == 0){
@@ -108,11 +108,11 @@ mat combine_summary_X(Mat<T>& geno, vector<SNP>& X_snps, SEXP SS, double lbPval)
       uvec q = find(lp_summaries < lbPval);
       lp_summaries.elem(q).fill(lbPval);
     }
-    cout << lp_summaries.n_rows <<":" << lp_summaries.n_cols << endl;
+    // cout << lp_summaries.n_rows <<":" << lp_summaries.n_cols << endl;
     if(lp_summaries.n_rows > lp_summaries.n_cols){
       lp_summaries = lp_summaries.t();
     }
-    cout << "lp_summaries=" << lp_summaries.n_rows <<" " << lp_summaries.n_cols << endl;
+    // cout << "lp_summaries=" << lp_summaries.n_rows <<" " << lp_summaries.n_cols << endl;
     return lp_summaries;
   }else{
     mat lp_summaries;
@@ -143,9 +143,9 @@ mat combine_summary(GenoInfo& geno, SEXP SS, double lbPval){
     double* lp_summary_ = &summary_value[0];
     Mat<double> lp_summary(lp_summary_, summaries.nrows(),xsize - 1, false);
     Summary summary(snps_vector,&lp_summary);
-    cout << "before jointing, snp number = " << geno.P << endl;
+    // cout << "before jointing, snp number = " << geno.P << endl;
     summary.cal_overlap(geno);
-    cout << "after jointing, snp number = " << geno.P << endl;
+    // cout << "after jointing, snp number = " << geno.P << endl;
     if( summary.lpsummary != NULL ){
       uvec q = find(*summary.lpsummary < lbPval);
       summary.lpsummary -> elem(q).fill(lbPval);
@@ -267,7 +267,7 @@ void preprocess_summary(SEXP Xs, SEXP  SS, double lbPval, int& type, int& N, int
       create_new_matrix = true;
       P = mat_X.n_cols;
     }
-    cout <<"create_new_matrix=" << create_new_matrix << endl;
+    // cout <<"create_new_matrix=" << create_new_matrix << endl;
     ptr = new Mat<int>(mat_X.memptr(), mat_X.n_rows, P , create_new_matrix);
   }else{
     double* p = REAL(Xs);

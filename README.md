@@ -6,10 +6,7 @@ IGESS is a statistical approach to integrating individual level genotype data an
 Usage
 =======
 
-The following two help pages provide a good start point for the genetic analysis using IGESS package, including the overview of IGESS package and the example command lines: 
-
-library(IGESS)  
-help(package="IGESS")  
+The file IGESS_package.pdf in inst/doc shows several examplex of how to use LEP package. 
 
 Development 
 =======

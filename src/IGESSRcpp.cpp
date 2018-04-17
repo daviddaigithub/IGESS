@@ -67,11 +67,11 @@ RcppExport SEXP IGESSCV(SEXP Xs, arma::vec& y, SEXP  SS = R_NilValue,  SEXP opts
   preprocess_summary(Xs, SS, lbPval, type, N, P, summary, ptr);
   double predict = 0;
   if(type == type_int){
-    cout << static_cast<Mat<int> *>(ptr) -> n_rows << " " << static_cast<Mat<int> *>(ptr) -> n_cols << endl;
+    // cout << static_cast<Mat<int> *>(ptr) -> n_rows << " " << static_cast<Mat<int> *>(ptr) -> n_cols << endl;
     int* data = static_cast<Mat<int> *>(ptr) ->memptr();
     predict = iGessCV(data, y,P,  &summary, lp_opt, type, false, measure);
   }else{
-    cout << static_cast<Mat<double> *>(ptr) -> n_rows << " " << static_cast<Mat<double> *>(ptr) -> n_cols << endl;
+    // cout << static_cast<Mat<double> *>(ptr) -> n_rows << " " << static_cast<Mat<double> *>(ptr) -> n_cols << endl;
     double* data = static_cast<Mat<double> *>(ptr) ->memptr();
     predict = iGessCV(data, y,P,  &summary, lp_opt, type, false, measure);
   }
