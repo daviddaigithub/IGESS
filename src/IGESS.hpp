@@ -33,7 +33,7 @@ double iGessCV(void* lpfX, vec y, int P, mat* lpsummaryinfo = NULL, Options* opt
 arma::Col<uword> cross_valind(arma::uword N, arma::uword nfold);
 
 template<typename T>
-void igess_update(T* x_j, double* gamma, double* mu, double d, double s, double logPi, double sigma2beta, double sigma2e, int N, double xy, double* ytilde_pt, double* lpsummay = NULL, vec* lpparam = NULL, double xmean_j = 0, int type = type_int, bool befloat = true);//,
+void igess_update(T* x_j, double* gamma, double* mu, double d, double s, double logPi, double sigma2beta, double sigma2e, int N, double xy, double* ytilde_pt, double* lpsummay = NULL, vec* lpparam = NULL, double xmean_j = 0, double xsd_j = 1, int type = type_int, bool befloat = true);//,
 
 template<class T>
 void addX (double* y, double a, T* x, int n);

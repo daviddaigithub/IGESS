@@ -30,16 +30,28 @@ void addX (double* y, double a, T* x, int n) {
 
 
 template<typename T>
-void igess_update(T* x_j, double* gamma, double* mu, double d, double s,  double logPi, double sigma2beta, double sigma2e, int N, double xy, double* ytilde_pt, double* lpsummay, vec* lpparam, double xmean_j, bool befloat){//
+void igess_update(T* x_j, double* gamma, double* mu, double d, double s,  double logPi, double sigma2beta, double sigma2e, int N, double xy, double* ytilde_pt, double* lpsummay, vec* lpparam, double xmean_j, double xsd_j, bool befloat){//
 
   double r = (*gamma) * (*mu);
-  double numerator = xy + d * r -  dotX(x_j, ytilde_pt, N);
+  // double numerator = xy + d * r -  dotX(x_j, ytilde_pt, N);
+  // mat y_tilde(ytilde_pt, N, 1, false);
+
+  double numerator = xy + d * r;
+  double xjyhat = dotX(x_j, ytilde_pt, N);
   mat y_tilde(ytilde_pt, N, 1, false);
 
+  // if(befloat == false){
+  //    double sum_y_tilde = as_scalar(sum(y_tilde));
+  //    numerator += xmean_j * sum_y_tilde;
+  // }
+  // (*mu) = s / sigma2e * numerator;
+
   if(befloat == false){
-     double sum_y_tilde = as_scalar(sum(y_tilde));
-     numerator += xmean_j * sum_y_tilde;
+    double sum_y_tilde = as_scalar(sum(y_tilde));
+    xjyhat -= xmean_j * sum_y_tilde;
+    xjyhat /= xsd_j;
   }
+  numerator -= xjyhat;
   (*mu) = s / sigma2e * numerator;
 
   double SSR_logratio(0);
@@ -61,10 +73,18 @@ void igess_update(T* x_j, double* gamma, double* mu, double d, double s,  double
 
   double rnew = (*gamma) * (*mu);
 
-  addX (ytilde_pt, rnew - r, x_j, N);
+  // addX (ytilde_pt, rnew - r, x_j, N);
+  // if(befloat == false){
+  //     y_tilde -= (rnew - r) * xmean_j;
+  // }
+  mat add_term(N,1,fill::zeros);
+  addX(add_term.memptr(), rnew - r, x_j, N);
   if(befloat == false){
-      y_tilde -= (rnew - r) * xmean_j;
+    add_term /= xsd_j;
+    add_term -= (rnew - r) * xmean_j / xsd_j;
   }
+  // addX(ytilde_pt, 1, x_j, N);
+  y_tilde += add_term;
 }
 
 
@@ -89,8 +109,10 @@ IGESSfit* iGess(void* lpfX, vec y, int P, mat* lpsummaryinfo, Options* opt, int 
   int max_iter = opt -> max_iter;
   int display_gap = opt -> display_gap;
   mat xty;
-  mat SZX(mean_x, P, 1, false);//store column means of X, return by function 'centering'
-  vec diagXTX = cal_diagXTX(y, X_mat, befloat, SZX, N, xty);
+
+  mat SDX(sd_x, 1, P, false);
+  mat SZX(mean_x, 1, P, false);//store column means of X, return by function 'centering'
+  vec diagXTX = cal_diagXTX(y, X_mat, befloat, SZX, SDX, N, xty);
 
   double pi_p = 0.01; //pi for prior proportion
   double mu0 = 0;
@@ -133,14 +155,14 @@ IGESSfit* iGess(void* lpfX, vec y, int P, mat* lpsummaryinfo, Options* opt, int 
       Mat<double> * mat_f = static_cast<Mat<double> *>(X_mat);
       double* lp_Xf = mat_f -> memptr();
       for (int j = 0; j < P; j++) {
-        igess_update(lp_Xf + N*j, lpgamma + j, lpmu + j, lpd[j], S[j], logPi, sigma2beta, sigma2e, (int)N,  lpxy[j], lpytilde, lpsummary + K * j, lpparams, mean_x[j], befloat);
+        igess_update(lp_Xf + N*j, lpgamma + j, lpmu + j, lpd[j], S[j], logPi, sigma2beta, sigma2e, (int)N,  lpxy[j], lpytilde, lpsummary + K * j, lpparams, mean_x[j],sd_x[j], befloat);
         gamma_sum += *(lpgamma + j);
       }
     }else{
       Mat<int> * mat_i = static_cast<Mat<int> *>(X_mat);
       int* lp_Xi = mat_i -> memptr();
       for (int j = 0; j < P; j++) {
-        igess_update(lp_Xi + N*j, lpgamma + j, lpmu + j, lpd[j], S[j], logPi, sigma2beta, sigma2e, (int)N,  lpxy[j], lpytilde, lpsummary + K * j, lpparams, mean_x[j], befloat);
+        igess_update(lp_Xi + N*j, lpgamma + j, lpmu + j, lpd[j], S[j], logPi, sigma2beta, sigma2e, (int)N,  lpxy[j], lpytilde, lpsummary + K * j, lpparams, mean_x[j],sd_x[j], befloat);
         gamma_sum += *(lpgamma + j);
       }
     }
@@ -176,7 +198,7 @@ IGESSfit* iGess(void* lpfX, vec y, int P, mat* lpsummaryinfo, Options* opt, int 
 
   mat betahat = conv_to<mat>::from(vardist.gamma % vardist.mu);
 
-  double cov = mean_y - as_scalar(SZX.t() * betahat);
+  double cov = mean_y - as_scalar(SZX * betahat);
   IGESSfit* fit = new IGESSfit(N, P,  K, iter, L,  sigma2e, sigma2beta, pi_p, vardist.gamma, vardist.mu
                                  , vardist.sigma2beta, lpparams,  ytilde, cov);
   delete[] mean_x;

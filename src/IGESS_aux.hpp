@@ -188,7 +188,7 @@ void cal_means(void* X_mat, bool befloat, int N, double* mean, double* sd);
 // void centering(void* X_mat, vec& y, double& mean_y, mat & SZX, bool befloat, int N, int P);
 void centering(void* X_mat, vec& y, double& mean_y, bool befloat, int N, int P, double* x_mean, double* x_sd);
 
-vec cal_diagXTX(const vec& y, void* X_mat, bool befloat, const mat& SZX, int N, mat& xty);
+vec cal_diagXTX(const vec& y, void* X_mat, bool befloat, const mat& SZX, const mat& SDX, int N, mat& xty);
 
 
 #endif /* IGESS_aux_hpp */

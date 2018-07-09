@@ -259,7 +259,7 @@ void cal_means(void* X_mat, bool befloat, int N, double* mean, double* sd){
 }
 
 
-vec cal_diagXTX(const vec& y, void* X_mat, bool befloat, const mat& SZX, int N, mat& xty){
+vec cal_diagXTX(const vec& y, void* X_mat, bool befloat, const mat& SZX, const mat& SDX, int N, mat& xty){
   double sum_y = sum(y);
   //mat xty;
   vec diagXTX;
@@ -269,9 +269,12 @@ vec cal_diagXTX(const vec& y, void* X_mat, bool befloat, const mat& SZX, int N, 
     xty = y.t( ) * (* mat_f);
     diagXTX = conv_to<vec>::from( sum(*mat_f % (*mat_f), 0) );
   }else{
-    Mat<int> * mat_i = static_cast<Mat<int> *>(X_mat);
+    Mat<char> * mat_i = static_cast<Mat<char> *>(X_mat);
     xty = y.t() * (* mat_i) - sum_y * SZX;
-    diagXTX = conv_to<vec>::from( sum( * mat_i % (* mat_i), 0) - N * SZX % SZX);
+    xty /= SDX;
+    mat diag(xty.n_elem,1);
+    diag.fill(N);
+    diagXTX = diag;
   }
   return diagXTX;
 
