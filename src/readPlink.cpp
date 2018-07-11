@@ -297,8 +297,6 @@ Summary::Summary(string summaryfile, vector<string> identifiers, string snpident
         this -> chrom_no = (int)indices.size();
     }
     this -> convert();
-
-
     cout <<"Read summary time is " << (clock() - t1)/CLOCKS_PER_SEC << endl;
 }
 

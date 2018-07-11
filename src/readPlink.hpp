@@ -176,7 +176,7 @@ public:
             boost::split( fields, line, boost::is_any_of("="));
             string key = fields[0];
             string value = fields[1];
-            cout <<"Key="<<key << endl;
+            //cout <<"Key="<<key << endl;
             boost::split( fields, value, boost::is_any_of(", "));
             config[key] = fields;
         }

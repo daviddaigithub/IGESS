@@ -262,7 +262,7 @@ void preprocess_summary(SEXP Xs, SEXP  SS, double lbPval, int& type, int& N, int
     int* p = INTEGER(Xs);
     Mat<int> mat_X(p, N, P, false);
     summary = combine_summary_X(mat_X, xsnps, SS, lbPval);
-    bool create_new_matrix = false;
+    bool create_new_matrix = true;
     if(mat_X.n_cols < P){
       create_new_matrix = true;
       P = mat_X.n_cols;
@@ -273,12 +273,12 @@ void preprocess_summary(SEXP Xs, SEXP  SS, double lbPval, int& type, int& N, int
     double* p = REAL(Xs);
     Mat<double> mat_X(p, N, P,false);
     summary = combine_summary_X(mat_X, xsnps, SS, lbPval);
-    bool create_new_matrix = false;
+    bool create_new_matrix = true;
     if(mat_X.n_cols < P){
         create_new_matrix = true;
         P = mat_X.n_cols;
     }
-    cout <<"create_new_matrix=" << create_new_matrix << endl;
+    // cout <<"create_new_matrix=" << create_new_matrix << endl;
     ptr = new Mat<double>(mat_X.memptr(), mat_X.n_rows, P , create_new_matrix);
   }
 }

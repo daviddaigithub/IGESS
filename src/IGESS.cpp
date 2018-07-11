@@ -236,12 +236,12 @@ double iGessCV(void* lpfX, vec y, int P, mat* lpsummaryinfo, Options* opt, int t
        //   double accuracy = calauc(conv_to<vec>::from(ylabel(test_idx)), conv_to<vec>::from(predy));
           delete f;
         }else{
-          Mat<int> * mat_i = static_cast<Mat<int> *>(X_mat);
-          Mat<int> trainM = mat_i -> rows(train_idx);
+          Mat<char> * mat_i = static_cast<Mat<char> *>(X_mat);
+          Mat<char> trainM = mat_i -> rows(train_idx);
           vec ytrain = y(train_idx);
           Mat<double> testM = conv_to<mat>::from(mat_i -> rows(test_idx));
           vec ytest = y(test_idx);
-          int* trainX = trainM.memptr();
+          char* trainX = trainM.memptr();
           IGESSfit* f = iGess(trainX, ytrain, P,  lpsummaryinfo, opt, type, efficient);
           vec predy = f -> predict(&testM);
           predY.elem(test_idx) = predy;
